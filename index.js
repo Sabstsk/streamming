@@ -36,10 +36,8 @@ io.on('connection', (socket) => {
     // WebRTC Offer/Answer/Ice-Candidates ko relay karna
     socket.on('signal', (data) => {
         // data mein 'roomId' aur 'signalData' (SDP/ICE) hoga
-        socket.to(data.roomId).emit('signal', {
-            sender: socket.id,
-            signal: data.signalData
-        });
+        // Emit signalData directly as clients expect it
+        socket.to(data.roomId).emit('signal', data.signalData);
     });
 
     // Control commands (Click/Swipe) ko relay karna
