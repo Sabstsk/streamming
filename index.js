@@ -4,11 +4,24 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
+
+// Health check endpoint for Render
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'Signaling Server Running' });
+});
+
+app.get('/health', (req, res) => {
+    res.json({ status: 'healthy' });
+});
+
 const io = new Server(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
-    }
+    },
+    // Important for Render
+    allowEIO3: true,
+    path: '/socket.io/'
 });
 
 io.on('connection', (socket) => {
