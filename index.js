@@ -1,0 +1,45 @@
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+
+    // Jab koi room join kare (Room ID unique honi chahiye dono apps ke liye)
+    socket.on('join-room', (roomId) => {
+        socket.join(roomId);
+        console.log(`User ${socket.id} joined room: ${roomId}`);
+    });
+
+    // WebRTC Offer/Answer/Ice-Candidates ko relay karna
+    socket.on('signal', (data) => {
+        // data mein 'roomId' aur 'signalData' (SDP/ICE) hoga
+        socket.to(data.roomId).emit('signal', {
+            sender: socket.id,
+            signal: data.signalData
+        });
+    });
+
+    // Control commands (Click/Swipe) ko relay karna
+    socket.on('control-command', (data) => {
+        socket.to(data.roomId).emit('control-command', data.command);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Signaling Server running on port ${PORT}`);
+});
